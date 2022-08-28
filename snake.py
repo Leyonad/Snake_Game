@@ -7,19 +7,21 @@ fps = 10
 WIDTH = 900
 HEIGHT = WIDTH
 
-SQUARES = 30
+SQUARES = 20
 R = WIDTH/SQUARES
 SPEED = R
 COLORGRID = (80,80,80)
-BACKGROUNDCOLOR = (8, 4, 0)
+BACKGROUNDCOLOR = (20, 20, 20)
+BWIDTH = 1
 
+WHITE = (255, 255, 255)
 RED = (240, 50, 50)
 GREEN = (50, 240, 50)
 
 FONTSTYLE = 'ROBOTO'
 FONTSIZE = 40
 FONTSIZETITLE = 60
-FONTCOLOR = (30, 30, 30)
+FONTCOLOR = (255, 255, 255)
 FONT = pygame.font.SysFont(FONTSTYLE, FONTSIZE)
 FONTTITLE = pygame.font.SysFont(FONTSTYLE, FONTSIZETITLE)
 
@@ -50,20 +52,21 @@ class Snake():
         self.moved = False
 
     def draw(self, win):
-        tl, tr, bl, br = 0, 0, 0, 0
-        if self.direction == [1, 0]:
-            tr, br = ROUNDNESS, ROUNDNESS
-        elif self.direction == [-1, 0]:
-            tl, bl = ROUNDNESS, ROUNDNESS
-        elif self.direction == [0, -1]:
-            tl, tr = ROUNDNESS, ROUNDNESS
-        elif self.direction == [0, 1]:
-            bl, br = ROUNDNESS, ROUNDNESS
-
-        pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, self.width, self.height), 
-                    border_top_left_radius=tl, border_top_right_radius=tr, border_bottom_left_radius=bl, border_bottom_right_radius=br)
-        for segment in self.segments:
+        pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, self.width, self.height))
+        for i, segment in enumerate(self.segments):
             pygame.draw.rect(win, self.color, pygame.Rect(segment[0], segment[1], self.width, self.height))
+            """pygame.draw.rect(win, BACKGROUNDCOLOR, pygame.Rect(segment[0], segment[1], self.width, self.height), width=BWIDTH)
+            
+            if i > 0:
+                if self.segments[i-1][0] < self.segments[i][0]: #line left
+                    pygame.draw.line(win, self.color, (self.segments[i][0]-BWIDTH, self.segments[i][1]+BWIDTH), (self.segments[i][0]-BWIDTH, self.segments[i][1]+self.height-BWIDTH*2), width=2)
+                if self.segments[i-1][0] > self.segments[i][0]: #line right
+                    pygame.draw.line(win, self.color, (self.segments[i][0]-BWIDTH+self.width, self.segments[i][1]+BWIDTH), (self.segments[i][0]-BWIDTH+self.width, self.segments[i][1]+self.height-BWIDTH*2), width=2)
+                if self.segments[i-1][1] > self.segments[i][1]: #line bottom
+                    pygame.draw.line(win, self.color, (self.segments[i][0]+BWIDTH, self.segments[i][1]-BWIDTH+self.height), (self.segments[i][0]-BWIDTH*2+self.width, self.segments[i][1]-BWIDTH+self.height), width=2)
+                if self.segments[i-1][1] < self.segments[i][1]: #line top
+                    pygame.draw.line(win, self.color, (self.segments[i][0]+BWIDTH, self.segments[i][1]-BWIDTH), (self.segments[i][0]-BWIDTH*2+self.width, self.segments[i][1]-BWIDTH), width=2)"""
+
 
     def move(self):
         if self.gaveCommand != 0:
@@ -113,7 +116,7 @@ class Apple():
         self.height = R
 
     def draw(self, win):
-        pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, self.width, self.height), border_radius=10)
+        pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, self.width, self.height))
 
     def updatePosition(self):
         self.x = random.randrange(0, SQUARES)*R
@@ -143,14 +146,14 @@ def drawGrid(win):
 def drawWindow(win):
     win.fill(BACKGROUNDCOLOR)
 
+    apple.draw(win)
+    snake.draw(win)
     if gamestate == 0:
         #drawGrid(win)
         if snake.getRect().colliderect(apple.getRect()):
             apple.updatePosition()
             snake.segments.append([snake.x, snake.y])
         snake.move()
-        apple.draw(win)
-        snake.draw(win)
     else:
         label = FONTTITLE.render(f'YOU LOST!', True, FONTCOLOR)
         label_rect = label.get_rect(center=(WIDTH/2, HEIGHT/3))
