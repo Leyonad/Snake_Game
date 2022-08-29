@@ -4,7 +4,7 @@ pygame.init()
 pygame.font.init()
 
 fps = 10
-WIDTH = 900
+WIDTH = 800
 HEIGHT = WIDTH
 
 SQUARES = 20
@@ -21,12 +21,12 @@ GREEN = (50, 240, 50)
 FONTSTYLE = 'ROBOTO'
 FONTSIZE = 40
 FONTSIZETITLE = 60
-FONTCOLOR = (255, 255, 255)
+FONTCOLOR = (130, 130, 130) #(255, 255, 255)
 FONT = pygame.font.SysFont(FONTSTYLE, FONTSIZE)
 FONTTITLE = pygame.font.SysFont(FONTSTYLE, FONTSIZETITLE)
 
-SNAKESTARTX = R*(SQUARES/2-1)
-SNAKESTARTY = R*(SQUARES/2-1)
+SNAKESTARTX = 0 #R*(SQUARES/2-1)
+SNAKESTARTY = 0 #R*(SQUARES/2-1)
 
 APPLESTARTX = R*(SQUARES*3//4)
 APPLESTARTY = R*(SQUARES/2-1)
@@ -36,6 +36,8 @@ ROUNDNESS = 30
 pygame.display.set_caption(f'Snake Game')
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 gamestate = 0
+score = 0
+maxscore = SQUARES**2
 
 class Snake():
     def __init__(self, x, y, color):
@@ -119,16 +121,20 @@ class Apple():
         pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, self.width, self.height))
 
     def updatePosition(self):
-        self.x = random.randrange(0, SQUARES)*R
-        self.y = random.randrange(0, SQUARES)*R
-        if [self.x, self.y] in snake.segments or [self.x, self.y] == [snake.x, snake.y]:
-            self.updatePosition()
+        global score
+        while True:
+            x, y = random.randrange(0, SQUARES)*R, random.randrange(0, SQUARES)*R
+            if [x, y] not in snake.segments and (x != snake.x or y != snake.y):
+                self.x, self.y = x, y
+                score += 1
+                #print(score)
+                break
 
     def getRect(self):
         return pygame.Rect(self.x, self.y, self.width, self.height)
 
 apple = Apple(RED)
-snake = Snake(SNAKESTARTX, SNAKESTARTY, GREEN)
+snake = Snake(SNAKESTARTX, SNAKESTARTY, WHITE)
 
 def resetGame():
     global gamestate
@@ -143,27 +149,49 @@ def drawGrid(win):
         pygame.draw.line(win, COLORGRID, (0, i*R), (WIDTH, i*R))
         pygame.draw.line(win, COLORGRID, (i*R, 0), (i*R, HEIGHT))
 
+def directionAlgorithm(x, y, direction):
+    if x == WIDTH-R:
+        direction = [0, 1]
+        if (y/R)%2 != 0:
+            direction = [-1, 0]
+    elif x == R and y != HEIGHT-R:
+        direction = [0, 1]
+        if (y/R)%2 == 0:
+            direction = [1, 0]
+    elif x == 0 and y == HEIGHT-R:
+        direction = [0, -1]
+    elif x == 0 and y == 0:
+        direction = [1, 0]
+    return direction
+
 def drawWindow(win):
+    global score, gamestate
     win.fill(BACKGROUNDCOLOR)
 
-    apple.draw(win)
-    snake.draw(win)
     if gamestate == 0:
         #drawGrid(win)
-        if snake.getRect().colliderect(apple.getRect()):
+        #snake.direction = directionAlgorithm(snake.x, snake.y, snake.direction)
+        snake.move()
+        apple.draw(win)
+        snake.draw(win)
+        if snake.x == apple.x and snake.y == apple.y:
             apple.updatePosition()
             snake.segments.append([snake.x, snake.y])
-        snake.move()
+            if score >= maxscore:
+                gamestate = 1
     else:
-        label = FONTTITLE.render(f'YOU LOST!', True, FONTCOLOR)
-        label_rect = label.get_rect(center=(WIDTH/2, HEIGHT/3))
-        label2 = FONT.render(f'POINTS: {len(snake.segments)}', True, FONTCOLOR)
-        label_rect2 = label2.get_rect(center=(WIDTH/2, HEIGHT/2+label.get_height()))
+        apple.draw(win)
+        snake.draw(win)
+        #label = FONTTITLE.render(f'YOU LOST!', True, FONTCOLOR)
+        #label_rect = label.get_rect(center=(WIDTH/2, HEIGHT/3))
+        label2 = FONT.render(f'POINTS: {score}', True, FONTCOLOR)
+        label_rect2 = label2.get_rect(center=(WIDTH/2, HEIGHT/2+label2.get_height()))
         label3 = FONT.render(f'PRESS ENTER TO RESTART', True, FONTCOLOR)
-        label_rect3 = label3.get_rect(center=(WIDTH/2, HEIGHT/2+label.get_height()*2))
-        win.blit(label, label_rect)
+        label_rect3 = label3.get_rect(center=(WIDTH/2, HEIGHT/2+label2.get_height()*2))
+        #win.blit(label, label_rect)
         win.blit(label2, label_rect2)
         win.blit(label3, label_rect3)
+    
 
 def main():
     clock = pygame.time.Clock()
